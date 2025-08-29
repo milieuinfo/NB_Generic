@@ -13,6 +13,7 @@
 
 
 * [Changelog](#changelog)
+  * [Release v1.4.0](#release-v140)
   * [Release v1.3.1](#release-v131)
   * [Release v1.3.0](#release-v130)
   * [Release v1.2.0](#release-v120)
@@ -25,6 +26,10 @@
 ---
 
 ## Changelog
+
+### Release v1.4.0
+
+1. Added timeouts for potential infinite loops
 
 ### Release v1.3.1
 
