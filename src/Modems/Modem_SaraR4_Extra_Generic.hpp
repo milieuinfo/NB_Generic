@@ -411,11 +411,28 @@ class NBClient_ModemUrcHandler : public ModemUrcHandler
       @param (size_t)   Buffer size
       @return buffer size
     */
+
     size_t write(const uint8_t* buf, size_t size)
+    {
+      return write(buf, size, _loopTimeout);
+    }
+
+    size_t write(const uint8_t* buf, size_t size, unsigned long timeout)
     {
       if (_writeSync)
       {
-        while (ready() == NB_RESPONSE_IDLE);
+	unsigned long timeStart = millis();
+        unsigned long timeEnd;
+
+        while (ready() == NB_RESPONSE_IDLE)
+	{
+          timeEnd = millis();
+          if (timeEnd - timeStart > timeout)
+          {
+	    stop();
+            return 0;
+          }
+        }
       }
       else if (ready() == NB_RESPONSE_IDLE)
       {
@@ -546,6 +563,8 @@ class NBClient_ModemUrcHandler : public ModemUrcHandler
 
     bool        _writeSync;
     String      _response;
+    
+    unsigned long	_loopTimeout;
 };
 
 ///////////////////////////////////////////////////////////////////////

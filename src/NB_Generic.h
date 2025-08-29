@@ -49,7 +49,7 @@ class NB
     /** Constructor
         @param debug    Determines debug mode
     */
-    NB(bool debug = false);
+    NB(bool debug = true);
 
     /** Start the NB IoT modem, attaching to the NB IoT or LTE Cat M1 network
         @param pin         SIM PIN number (4 digits in a string, example: "1234"). If

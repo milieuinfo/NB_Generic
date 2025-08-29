@@ -130,6 +130,7 @@ class NBClient : public Client, public NBClient_ModemUrcHandler
         @return 1 if exists, 0 if not exists
     */
     int available();
+    int available(unsigned long);
 
     /** Read a character from response buffer but does not move the pointer.
         @return character
@@ -149,6 +150,7 @@ class NBClient : public Client, public NBClient_ModemUrcHandler
   private:
 
     int connect();
+    int connect(unsigned long);
 
     bool _synch;
 };

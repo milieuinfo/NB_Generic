@@ -54,6 +54,7 @@ NBClient::NBClient(int socket, bool synch)
   _port           = 0;
   _ssl            = false;
   _writeSync      = true;
+  _loopTimeout	 = 100000;
 
   MODEM.addUrcHandler(this);
 }
@@ -105,6 +106,11 @@ int NBClient::connectSSL(const char *host, uint16_t port)
 
 int NBClient::connect()
 {
+  return connect(_loopTimeout);
+}
+
+int NBClient::connect(unsigned long timeout)
+{
   if (_socket != -1)
   {
     stop();
@@ -112,8 +118,20 @@ int NBClient::connect()
 
   if (_synch)
   {
-    while (ready() == NB_RESPONSE_IDLE);
+    unsigned long timeStart = millis();
+    unsigned long timeEnd;
+
+    while (ready() == NB_RESPONSE_IDLE)
+    {
+      timeEnd = millis();
+      if (timeEnd - timeStart > timeout)
+      {
+	stop();
+        return 0;
+      }
+    }
   }
+
   else if (ready() == NB_RESPONSE_IDLE)
   {
     return 0;
@@ -227,9 +245,25 @@ int NBClient::read()
 
 int NBClient::available()
 {
+  return available(_loopTimeout);
+}
+
+int NBClient::available(unsigned long timeout)
+{
   if (_synch)
   {
-    while (ready() == NB_RESPONSE_IDLE);
+    unsigned long timeStart = millis();
+    unsigned long timeEnd;
+
+    while (ready() == NB_RESPONSE_IDLE)
+    {
+      timeEnd = millis();
+      if (timeEnd - timeStart > timeout)
+      {
+	stop();
+        return 0;
+      }
+    }
   }
   else if (ready() == NB_RESPONSE_IDLE)
   {

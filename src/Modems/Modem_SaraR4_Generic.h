@@ -192,8 +192,9 @@ class ModemClass
     int begin(unsigned long baud, bool restart = false)
     {
       // datasheet warns not to use _resetPin, this may lead to an unrecoverable state
+      pinMode(_powerOnPin, OUTPUT);
+      pinMode(_resetPin, OUTPUT);
       digitalWrite(_resetPin, LOW);
-
       if (restart)
       {
         shutdown();
@@ -208,18 +209,33 @@ class ModemClass
         newBaud = true;
       }
 
+      NB_LOGDEBUG(F("begin: POWER_ON_MODULE"));
+      if (isPowerOn() == NB_MODEM_START_ERROR)
+      {
+        NB_LOGDEBUG(F("begin: Reset"));
+        digitalWrite(_powerOnPin, HIGH);
+        
+        delay(300); // Datasheet says power-on pulse should be >=150ms, <=3200ms
+        
+        digitalWrite(_powerOnPin, LOW);
+        
+        setVIntPin(SARA_VINT_ON);
+        NB_LOGDEBUG(F("begin: Reset done"));
+      }
+
       NB_LOGDEBUG1(F("begin: UART baud = "), _baud);
 
       _uart->begin(_baud > 115200 ? 115200 : _baud);
 
 #if UBLOX_USING_POWER_ON_PIN
       // power on module
+      NB_LOGDEBUG(F("begin: POWER_ON_MODULE"));
       if (isPowerOn() == NB_MODEM_START_ERROR)
       {
         NB_LOGDEBUG(F("begin: Reset"));
         digitalWrite(_powerOnPin, HIGH);
         
-        delay(150); // Datasheet says power-on pulse should be >=150ms, <=3200ms
+        delay(300); // Datasheet says power-on pulse should be >=150ms, <=3200ms
         
         digitalWrite(_powerOnPin, LOW);
         
@@ -240,7 +256,6 @@ class ModemClass
 
       if (!autosense())
       {
-        NB_LOGDEBUG(F("begin: autosense error"));
         return NB_MODEM_START_ERROR;
       }
 
@@ -329,7 +344,7 @@ class ModemClass
       // Hardware pin reset, only use in EMERGENCY
       digitalWrite(_resetPin, HIGH);
       
-      delay(1000); // Datasheet says nothing, so guess we wait one second
+      delay(10000); // Datasheet says nothing, so guess we wait one second
       
       digitalWrite(_resetPin, LOW);
       setVIntPin(SARA_VINT_OFF);
@@ -560,7 +575,7 @@ class ModemClass
 
     /////////////////////////////////////////
 
-    int waitForResponse(unsigned long timeout = 200, String* responseDataStorage = NULL)
+    int waitForResponse(unsigned long timeout = 500, String* responseDataStorage = NULL)
     {
       _responseDataStorage = responseDataStorage;
 
@@ -2092,15 +2107,7 @@ class ModemClass
 
 //////////////////////////////////////////////////////
 
-#if (UBLOX_USING_POWER_ON_PIN && UBLOX_USING_RESET_PIN)
-  ModemClass MODEM(SerialNB, 115200, NB_RESETN, NB_PWR, SARA_VINT);
-#elif UBLOX_USING_POWER_ON_PIN
-  ModemClass MODEM(SerialNB, 115200, -1, NB_PWR, SARA_VINT);
-#elif UBLOX_USING_RESET_PIN
-  ModemClass MODEM(SerialNB, 115200, NB_RESETN);
-#else
-  ModemClass MODEM(SerialNB, 115200);
-#endif
+ModemClass MODEM(SerialNB, 115200, NB_RESETN, NB_PWR, SARA_VINT);
 
 ModemUrcHandler* ModemClass::_urcHandlers[MAX_URC_HANDLERS] = { NULL };
 Print* ModemClass::_debugPrint = NULL;
